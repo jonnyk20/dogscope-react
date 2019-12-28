@@ -1,41 +1,52 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useReducer } from "react";
 import * as mobilenet from "@tensorflow-models/mobilenet";
 import "./App.css";
 
-const STATES = {
-  INITIAL: "INITIAL",
-  MODEL_LOADING: "MODEL_LOADING",
-  MODEL_LOADED: "MODEL_LOADED",
-  IMAGE_UPLOADED: "IMAGE_UPLOADED",
-  IDENTIFYING: "IDENTIFYING",
-  COMPLETE: "COMPLETE"
+const machine = {
+  initial: "initial",
+  states: {
+    initial: { next: "loadingModel" },
+    loadingModel: { next: "modelReady" },
+    modelReady: { next: "imageReady" },
+    imageReady: { next: "identifying", showImage: true },
+    identifying: { next: "complete" },
+    complete: { next: "modelReady", showImage: true }
+  }
 };
 
 function App() {
-  const [state, setState] = useState(STATES.INITIAL);
   const [results, setResults] = useState([]);
   const [imageURL, setImageURL] = useState(null);
   const [model, setModel] = useState(null);
   const imageRef = useRef();
+  const inputRef = useRef();
+
+  const reducer = (state, event) =>
+    machine.states[state][event] || machine.initial;
+
+  const [appState, dispatch] = useReducer(reducer, machine.initial);
+  const next = () => dispatch("next");
 
   const loadModel = async () => {
-    setState(STATES.MODEL_LOADING);
+    next();
     const model = await mobilenet.load();
     setModel(model);
-    setState(STATES.MODEL_LOADED);
+    next();
   };
 
   const identify = async () => {
-    setState(STATES.IDENTIFYING);
+    next();
     const results = await model.classify(imageRef.current);
     setResults(results);
-    setState(STATES.COMPLETE);
+    next();
   };
 
   const reset = async () => {
-    setState(STATES.MODEL_LOADED);
     setResults([]);
+    next();
   };
+
+  const upload = () => inputRef.current.click();
 
   const handleUpload = event => {
     const { files } = event.target;
@@ -43,57 +54,30 @@ function App() {
       const url = URL.createObjectURL(event.target.files[0]);
       setImageURL(url);
     }
-    setState(STATES.IMAGE_UPLOADED);
+    next();
   };
 
-  let prompt = null;
-
-  switch (state) {
-    case STATES.INITIAL:
-      prompt = <button onClick={loadModel}>Load Model</button>;
-      break;
-    case STATES.MODEL_LOADING:
-      prompt = <div className="progress">Loading...</div>;
-      break;
-    case STATES.MODEL_LOADED:
-      prompt = (
-        <label>
-          <input
-            type="file"
-            accept="image/*"
-            capture="camera"
-            onChange={handleUpload}
-          />
-          upload photo
-        </label>
-      );
-      break;
-    case STATES.IMAGE_UPLOADED:
-      prompt = <button onClick={identify}>Identify</button>;
-      break;
-    case STATES.IDENTIFYING:
-      prompt = <div className="progress">Identifying...</div>;
-      break;
-    case STATES.COMPLETE:
-      prompt = (
-        <button id="reset" onClick={reset}>
-          Reset
-        </button>
-      );
-      break;
-    default:
-      prompt = null;
-      break;
-  }
-
-  const previewVisible =
-    state === STATES.IMAGE_UPLOADED || state === STATES.COMPLETE;
+  const actionButton = {
+    initial: { action: loadModel, text: "Load Model" },
+    loadingModel: { text: "Loading Model..." },
+    modelReady: { action: upload, text: "Upload Image" },
+    imageReady: { action: identify, text: "Identify Breed" },
+    identifying: { text: "Identifying..." },
+    complete: { action: reset, text: "Reset" }
+  };
 
   return (
     <div id="container">
-      {previewVisible && (
+      {machine.states[appState].showImage && (
         <img src={imageURL} alt="upload-preview" ref={imageRef} />
       )}
+      <input
+        type="file"
+        accept="image/*"
+        capture="camera"
+        onChange={handleUpload}
+        ref={inputRef}
+      />
       {results.length > 0 && (
         <ul id="results">
           {results.map(({ className, probability }) => (
@@ -103,7 +87,9 @@ function App() {
           ))}
         </ul>
       )}
-      {prompt}
+      <button onClick={actionButton[appState].action || (() => {})}>
+        {actionButton[appState].text}
+      </button>
     </div>
   );
 }
