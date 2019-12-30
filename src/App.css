@@ -2,8 +2,7 @@ body {
   color: white;
   background: black;
 }
-
-#container {
+div {
   display: flex;
   flex-direction: column;
   text-align: center;
@@ -20,7 +19,9 @@ input {
   z-index: -1;
 }
 
-button, label, .progress, #results {
+button,
+label,
+ul {
   width: 300px;
   box-sizing: border-box;
   border: solid 1px white;
@@ -40,9 +41,8 @@ img {
   margin-bottom: 25px;
 }
 
-#results {
+ul {
   list-style: none;
   padding: 10px;
   margin-bottom: 25px;
 }
-

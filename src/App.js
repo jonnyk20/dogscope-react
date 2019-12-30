@@ -5,12 +5,12 @@ import "./App.css";
 const machine = {
   initial: "initial",
   states: {
-    initial: { next: "loadingModel" },
-    loadingModel: { next: "modelReady" },
-    modelReady: { next: "imageReady" },
-    imageReady: { next: "identifying", showImage: true },
-    identifying: { next: "complete" },
-    complete: { next: "modelReady", showImage: true }
+    initial: { on: { next: "loadingModel" } },
+    loadingModel: { on: { next: "modelReady" } },
+    modelReady: { on: { next: "imageReady" } },
+    imageReady: { on: { next: "identifying" }, showImage: true },
+    identifying: { on: { next: "complete" } },
+    complete: { on: { next: "modelReady" }, showImage: true }
   }
 };
 
@@ -22,7 +22,7 @@ function App() {
   const inputRef = useRef();
 
   const reducer = (state, event) =>
-    machine.states[state][event] || machine.initial;
+    machine.states[state].on[event] || machine.initial;
 
   const [appState, dispatch] = useReducer(reducer, machine.initial);
   const next = () => dispatch("next");
@@ -53,8 +53,8 @@ function App() {
     if (files.length > 0) {
       const url = URL.createObjectURL(event.target.files[0]);
       setImageURL(url);
+      next();
     }
-    next();
   };
 
   const actionButton = {
@@ -67,7 +67,7 @@ function App() {
   };
 
   return (
-    <div id="container">
+    <div>
       {machine.states[appState].showImage && (
         <img src={imageURL} alt="upload-preview" ref={imageRef} />
       )}
@@ -79,7 +79,7 @@ function App() {
         ref={inputRef}
       />
       {results.length > 0 && (
-        <ul id="results">
+        <ul>
           {results.map(({ className, probability }) => (
             <li key={className}>{`${className}: %${(probability * 100).toFixed(
               2
