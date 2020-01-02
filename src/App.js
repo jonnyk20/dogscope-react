@@ -10,7 +10,7 @@ const machine = {
     modelReady: { on: { next: "imageReady" } },
     imageReady: { on: { next: "identifying" }, showImage: true },
     identifying: { on: { next: "complete" } },
-    complete: { on: { next: "modelReady" }, showImage: true }
+    complete: { on: { next: "modelReady" }, showImage: true, showResults: true }
   }
 };
 
@@ -66,11 +66,11 @@ function App() {
     complete: { action: reset, text: "Reset" }
   };
 
+  const { showImage, showResults } = machine.states[appState];
+
   return (
     <div>
-      {machine.states[appState].showImage && (
-        <img src={imageURL} alt="upload-preview" ref={imageRef} />
-      )}
+      {showImage && <img src={imageURL} alt="upload-preview" ref={imageRef} />}
       <input
         type="file"
         accept="image/*"
@@ -78,13 +78,15 @@ function App() {
         onChange={handleUpload}
         ref={inputRef}
       />
-      <ul>
-        {results.map(({ className, probability }) => (
-          <li key={className}>{`${className}: %${(probability * 100).toFixed(
-            2
-          )}`}</li>
-        ))}
-      </ul>
+      {showResults && (
+        <ul>
+          {results.map(({ className, probability }) => (
+            <li key={className}>{`${className}: %${(probability * 100).toFixed(
+              2
+            )}`}</li>
+          ))}
+        </ul>
+      )}
       <button onClick={actionButton[appState].action || (() => {})}>
         {actionButton[appState].text}
       </button>
