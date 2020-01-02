@@ -78,15 +78,13 @@ function App() {
         onChange={handleUpload}
         ref={inputRef}
       />
-      {results.length > 0 && (
-        <ul>
-          {results.map(({ className, probability }) => (
-            <li key={className}>{`${className}: %${(probability * 100).toFixed(
-              2
-            )}`}</li>
-          ))}
-        </ul>
-      )}
+      <ul>
+        {results.map(({ className, probability }) => (
+          <li key={className}>{`${className}: %${(probability * 100).toFixed(
+            2
+          )}`}</li>
+        ))}
+      </ul>
       <button onClick={actionButton[appState].action || (() => {})}>
         {actionButton[appState].text}
       </button>
