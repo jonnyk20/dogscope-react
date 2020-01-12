@@ -42,3 +42,8 @@ ul {
   padding: 10px;
   margin-bottom: 25px;
 }
+
+li:not(:last-child) {
+  padding: 10px;
+  border-bottom: solid 1px;
+}
