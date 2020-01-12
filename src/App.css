@@ -2,6 +2,7 @@ body {
   color: white;
   background: black;
 }
+
 div {
   display: flex;
   flex-direction: column;
